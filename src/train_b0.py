@@ -10,6 +10,12 @@ Diversity axis vs. M1 (B2):
 
 from __future__ import annotations
 
+import sys as _sys
+import os as _os
+_project_root = _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__)))
+if _project_root not in _sys.path:
+    _sys.path.insert(0, _project_root)
+
 import argparse
 import dataclasses
 import numpy as np

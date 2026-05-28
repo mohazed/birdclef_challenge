@@ -6,6 +6,12 @@ per-species confidence thresholds are saved as training data for the next round.
 
 from __future__ import annotations
 
+import sys as _sys
+import os as _os
+_project_root = _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__)))
+if _project_root not in _sys.path:
+    _sys.path.insert(0, _project_root)
+
 import time
 from pathlib import Path
 from typing import Sequence
@@ -130,6 +136,7 @@ def generate_pseudo_labels(
     output_csv: str | Path,
     round_num: int,
     device: str = "cpu",
+    max_files: int | None = None,
 ) -> pd.DataFrame:
     """Generate and save pseudo-labels for unannotated soundscapes.
 
@@ -175,6 +182,8 @@ def generate_pseudo_labels(
 
     all_ogg = sorted(soundscape_dir.glob("*.ogg"))
     candidate_files = [f for f in all_ogg if f.name not in excluded_set]
+    if max_files is not None:
+        candidate_files = candidate_files[:max_files]
     n_files = len(candidate_files)
     print(
         f"[Round {round_num}] {n_files} candidate soundscapes "
@@ -352,6 +361,8 @@ if __name__ == "__main__":
     gen.add_argument("--output-csv", required=True)
     gen.add_argument("--round", type=int, required=True, dest="round_num")
     gen.add_argument("--device", default="cpu")
+    gen.add_argument("--max-files", type=int, default=None,
+                     help="Limit number of soundscapes processed (for dry-run)")
 
     # --- stats ---
     stats = subparsers.add_parser("stats", help="Print summary stats for a pseudo-label CSV")
@@ -377,6 +388,7 @@ if __name__ == "__main__":
             output_csv=args.output_csv,
             round_num=args.round_num,
             device=args.device,
+            max_files=args.max_files,
         )
 
     elif args.command == "stats":

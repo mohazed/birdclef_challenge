@@ -125,7 +125,7 @@ def build_mel_cache(
     failed_log = Path("data/failed_clips.txt")
     failed_log.parent.mkdir(parents=True, exist_ok=True)
 
-    rows = list(zip(train["filename"], train["primary_label"]))
+    rows = list(zip(train["filename"], train["primary_label"].astype(str)))
 
     # filter already-done
     pending = [

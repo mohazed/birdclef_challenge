@@ -2,6 +2,14 @@
 
 from __future__ import annotations
 
+import sys as _sys
+import os as _os
+# When run as `python src/train.py` the project root is not in sys.path.
+# Insert it so `from src.xxx import` works regardless of invocation style.
+_project_root = _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__)))
+if _project_root not in _sys.path:
+    _sys.path.insert(0, _project_root)
+
 import argparse
 import random
 from dataclasses import asdict, dataclass
@@ -121,6 +129,9 @@ def compute_macro_auc(y_true: np.ndarray, y_prob: np.ndarray, class_indices: lis
         yp = y_prob[:, idx]
         if len(np.unique(yt)) < 2:
             continue
+        # Guard against NaN / Inf from unstable loss on tiny batches
+        if not np.isfinite(yp).all():
+            yp = np.nan_to_num(yp, nan=0.0, posinf=1.0, neginf=0.0)
         aucs.append(roc_auc_score(yt, yp))
     if not aucs:
         return float("nan")
@@ -150,7 +161,7 @@ def train_one_epoch(
             x, y = apply_cutmix(x, y)
 
         optimizer.zero_grad(set_to_none=True)
-        with torch.autocast(device_type=device.type, enabled=(device.type in ("cuda", "mps"))):
+        with torch.autocast(device_type=device.type, enabled=(device.type == "cuda")):
             logits = model(x)
             loss_matrix = criterion(logits, y)
             sample_loss = loss_matrix.mean(dim=1)

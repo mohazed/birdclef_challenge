@@ -7,6 +7,12 @@ on train_audio due to the 8.7 dB SNR domain gap).
 
 from __future__ import annotations
 
+import sys as _sys
+import os as _os
+_project_root = _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__)))
+if _project_root not in _sys.path:
+    _sys.path.insert(0, _project_root)
+
 import warnings
 from pathlib import Path
 
@@ -73,6 +79,7 @@ def run_soundscape_validation(
     taxonomy_csv: str | Path | None = None,
     batch_size: int = 16,
     device: str = "cpu",
+    max_files: int | None = None,
 ) -> dict:
     """
     Evaluate an ensemble of PyTorch checkpoints against expert-annotated soundscapes.
@@ -136,6 +143,9 @@ def run_soundscape_validation(
     for row_i, row in annot.iterrows():
         fname = row["filename"]
         file_windows.setdefault(fname, []).append((row_i, row["start_sec"], row["end_sec"]))
+
+    if max_files is not None:
+        file_windows = dict(list(file_windows.items())[:max_files])
 
     preds = np.zeros((n_windows, n_classes), dtype=np.float32)
     missing_files = 0
@@ -281,6 +291,8 @@ if __name__ == "__main__":
     parser.add_argument("--taxonomy-csv", default=None, help="taxonomy.csv for bird/non-bird split")
     parser.add_argument("--batch-size", type=int, default=16)
     parser.add_argument("--device", default="cpu")
+    parser.add_argument("--max-files", type=int, default=None,
+                        help="Limit number of soundscapes processed (for dry-run)")
     args = parser.parse_args()
 
     sub = pd.read_csv(args.sample_submission)
@@ -296,4 +308,5 @@ if __name__ == "__main__":
         taxonomy_csv=args.taxonomy_csv,
         batch_size=args.batch_size,
         device=args.device,
+        max_files=args.max_files,
     )
