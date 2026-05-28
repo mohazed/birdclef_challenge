@@ -1,0 +1,19 @@
+# DO NOT MODIFY — regenerated from colab_training_pipeline.ipynb Cell 4
+backbone: tf_efficientnet_b0_ns
+pretrained: true
+num_classes: 234
+epochs: 15
+batch_size: 32
+lr: 1.0e-3
+weight_decay: 1.0e-4
+mixup_alpha: 0.4
+cutmix_alpha: 0.4
+label_smoothing: 0.05
+sr: 32000
+n_fft: 2048
+hop_length: 512
+n_mels: 128
+f_min: 20
+f_max: 16000
+img_size: 224
+checkpoint_dir: checkpoints/
